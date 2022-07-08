@@ -326,6 +326,7 @@ class modsendrecurringinvoicebymail extends DolibarrModules
      */
     public function init($options='')
     {
+        global $entity;
         // Launch SQL files
         $result=$this->_load_tables('/' . basename(dirname(dirname(dirname(__FILE__)))) . '/sql/');
         if ($result < 0) return -1; // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
@@ -333,14 +334,15 @@ class modsendrecurringinvoicebymail extends DolibarrModules
         // Launch small and conditional SQL queries
         $sql = array();
         // we check if our model already exists
-        $result = $this->db->query("SELECT COUNT(*) AS cpt FROM " . MAIN_DB_PREFIX . "c_email_templates WHERE module = 'sendrecurringinvoicebymail'");
+        $result = $this->db->query("SELECT COUNT(*) AS cpt FROM " . MAIN_DB_PREFIX . "c_email_templates WHERE module = 'sendrecurringinvoicebymail' and entity=".$entity);
         if ($result) {
             $row = $this->db->fetch_object($result);
             if ($row->cpt == 0) {
                 $sql[] = "INSERT INTO " . MAIN_DB_PREFIX."c_email_templates
-                    (module, type_template, lang, label, joinfiles, topic, content)
+                    (module, entity, type_template, lang, label, joinfiles, topic, content)
                     VALUES (
                     'sendrecurringinvoicebymail',
+                    $entity,
                     'facture_send',
                     '',
                     'SendRecurringInvoiceByMail : original template',
@@ -352,7 +354,7 @@ class modsendrecurringinvoicebymail extends DolibarrModules
 
         // Reactivate the template in case the module has been
         // uninstalled which should have disabled the template.
-        $sql[] = "UPDATE " . MAIN_DB_PREFIX . "c_email_templates SET enabled = 1 WHERE module = 'sendrecurringinvoicebymail'";
+        $sql[] = "UPDATE " . MAIN_DB_PREFIX . "c_email_templates SET enabled = 1 WHERE module = 'sendrecurringinvoicebymail' and entity=".$entity;
 
         // Cleaning up old (and ugly) system which
         // used note_private to store overriding data.
@@ -401,12 +403,13 @@ class modsendrecurringinvoicebymail extends DolibarrModules
      */
     public function remove($options = '')
     {
+        global $entity;
         $sql = array();
 
         // Disable the template
         // (instead of deleting it, which may cause unwanted work loss)
         // (Yeah, counterside is data bloat... sorry...)
-        $sql[] = "UPDATE " . MAIN_DB_PREFIX . "c_email_templates SET enabled = 0 WHERE module = 'sendrecurringinvoicebymail'";
+        $sql[] = "UPDATE " . MAIN_DB_PREFIX . "c_email_templates SET enabled = 0 WHERE module = 'sendrecurringinvoicebymail' and entity=".$entity;
 
         return $this->_remove($sql, $options);
     }

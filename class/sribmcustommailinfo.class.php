@@ -279,7 +279,7 @@ class SRIBMCustomMailInfo extends CommonObject
      */
     public function fetch($rowid, $ref=null, $fill_defaults_from_template = false)
     {
-        global $conf;
+        global $conf, $entity;
 
         $sql = "SELECT rowid, fk_facture_rec, active, addmaindocfile, fromtype, frommail, sendto_thirdparty, sendto_free, sendcc_thirdparty, sendcc_free, sendbcc_thirdparty, sendbcc_free, subject, body, body_ishtml";
         $sql .= " FROM " . MAIN_DB_PREFIX . $this->table_element;
@@ -358,7 +358,7 @@ class SRIBMCustomMailInfo extends CommonObject
 
         // Optionally, if the model hasn't been found (no id), we fill with the template's data
         if (!$this->id && $fill_defaults_from_template) {
-            $result = $this->db->query("SELECT topic, content, joinfiles FROM " . MAIN_DB_PREFIX . "c_email_templates WHERE module = 'sendrecurringinvoicebymail' AND active = 1 AND enabled = '1' ORDER BY tms DESC LIMIT 1");
+            $result = $this->db->query("SELECT topic, content, joinfiles FROM " . MAIN_DB_PREFIX . "c_email_templates WHERE module = 'sendrecurringinvoicebymail' AND active = 1 AND enabled = '1' AND entity = " . $entity . " ORDER BY tms DESC LIMIT 1");
             if ( ! $result or ! ($template = $this->db->fetch_object($result))) {
                 $this->error = "Can't find mail template for sendrecurringinvoicebymail";
                 dol_syslog("SRIBMCustomMailInfo::fetch error " . $this->error, LOG_ERR);
